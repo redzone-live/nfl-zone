@@ -1,0 +1,36 @@
+NFL ZONE - METTRE L'APPLI SUR TON IPHONE
+=========================================
+
+Le dossier NFL_Zone_web contient tout ce qu'il faut. Il faut juste le mettre
+sur internet (gratuit), puis l'ajouter a l'ecran d'accueil de l'iPhone.
+
+ETAPE 1 - Creer un compte GitHub (gratuit)
+  - Va sur github.com et clique "Sign up".
+
+ETAPE 2 - Creer le site
+  - Une fois connecte, clique sur "+" en haut a droite > "New repository".
+  - Nom : nfl-zone - coche "Public" - clique "Create repository".
+
+ETAPE 3 - Envoyer les fichiers
+  - Clique sur "uploading an existing file".
+  - Ouvre le dossier NFL_Zone_web sur ton PC, selectionne TOUS les fichiers
+    (index.html, manifest.webmanifest, sw.js, les 4 icon-*.png)
+    et glisse-les dans la page.
+  - Clique "Commit changes".
+
+ETAPE 4 - Activer le site
+  - Onglet "Settings" > menu "Pages" (a gauche).
+  - Source : "Deploy from a branch" - Branch : "main" - dossier "/ (root)" - Save.
+  - Attends 1 a 2 minutes. L'adresse apparait en haut :
+    https://TON-PSEUDO.github.io/nfl-zone/
+
+ETAPE 5 - Installer sur l'iPhone
+  - Ouvre cette adresse dans SAFARI (pas Chrome).
+  - Bouton Partager (carre avec fleche) > "Sur l'ecran d'accueil" > Ajouter.
+  - L'icone NFL Zone s'ouvre en plein ecran, comme une vraie appli.
+
+IMPORTANT
+  - Les donnees viennent d'ESPN (source non officielle, sans cle). Internet obligatoire.
+  - Pas de notifications push : elles demandent un serveur, non inclus.
+  - Mise a jour plus tard : remplace index.html sur GitHub
+    (Add file > Upload files), puis ferme et rouvre l'appli.
