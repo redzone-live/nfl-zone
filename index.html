@@ -363,9 +363,13 @@ async function selWeek(t,w){S.wk={t,w};renderCal();try{await loadWeek(t,w);S.err
 async function loadResults(){const W=resWeeks().slice(0,S.resN);for(const w of W){if(S.byWeek[WK(2,w)])continue;try{await loadWeek(2,w)}catch(e){S.err=e.message;break}renderRes()}renderRes()}
 const ORD='QB RB FB WR TE T OT G OG C OL DE DT NT DL LB ILB OLB MLB CB S FS SS DB PK K P LS'.split(' ');
 const GO=['offense','defense','specialTeam','injuredReserveOrOut','practiceSquad','suspended'],GL={injuredReserveOrOut:'Réserve des blessés',practiceSquad:'Équipe d’entraînement',suspended:'Suspendu'};
+function fmtHt(a){let inch=+a.height;if(!(inch>0)){const m=/(\d+)\s*'\s*(\d+)?/.exec(a.displayHeight||'');inch=m?(+m[1])*12+(+m[2]||0):NaN}if(!(inch>0))return a.displayHeight;
+ if(LANG==='en'){const f=Math.floor(inch/12),i=Math.round(inch-f*12);return f+"' "+i+'"'}return Math.round(inch*2.54)+' cm'}
+function fmtWt(a){let lb=+a.weight;if(!(lb>0)){const m=/(\d+(?:\.\d+)?)/.exec(a.displayWeight||'');lb=m?+m[1]:NaN}if(!(lb>0))return a.displayWeight;
+ return LANG==='en'?Math.round(lb)+' lbs':Math.round(lb*0.45359237)+' kg'}
 function mkP(a,grp){const col=a.college&&a.college.name,bd=a.dateOfBirth&&!isNaN(Date.parse(a.dateOfBirth))?new Date(a.dateOfBirth).toLocaleDateString(LOC):'',bp=a.birthPlace?[a.birthPlace.city,a.birthPlace.state||a.birthPlace.country].filter(Boolean).join(', '):'',stt=a.status&&a.status.name;
  return{id:a.id,name:a.fullName||a.displayName||'Joueur',pos:a.position&&a.position.abbreviation,num:a.jersey,photo:a.headshot&&a.headshot.href,grp,
-  bio:[['Taille',a.displayHeight],['Poids',a.displayWeight],['Âge',a.age],['Né le',bd],['Lieu de naissance',bp],['Université',col],['Expérience (ans)',a.experience&&a.experience.years],['Statut',stt==='Active'?'Actif':stt]].filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=='')}}
+  bio:[['Taille',fmtHt(a)],['Poids',fmtWt(a)],['Âge',a.age],['Né le',bd],['Lieu de naissance',bp],['Université',col],['Expérience (ans)',a.experience&&a.experience.years],['Statut',stt==='Active'?'Actif':stt]].filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=='')}}
 async function openTeam(ab){S.team=ab;S.roster=[];S.tv='roster';nav('teamview');const t=TN[ab];
  $('teamview').innerHTML='<button type="button" class="back" data-back>‹ Retour</button><div class="simple" style="margin-top:0"><div style="display:flex;gap:12px;align-items:center">'+logo(ab,64)+'<div><h2 style="margin:0">'+esc(t[1])+'</h2><small class="muted">'+esc(t[0])+(S.year?' · saison '+S.year:'')+'</small></div>'+starH(ab,1)+'</div></div><div class="chips" style="margin-top:12px"><button type="button" class="on" data-tv="roster">Effectif</button><button type="button" data-tv="sched">Calendrier</button><button type="button" data-tv="stat">Statistiques</button></div><div id="rost" class="note">Chargement de l’effectif…</div><div id="tsched" style="display:none"></div><div id="tstat" style="display:none"></div>';
  const el=$('rost');let r=[],err='';
