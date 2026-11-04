@@ -126,8 +126,8 @@ function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?
  if(g.live){v=[q&&(q.sd||q.dd)||'En cours',q&&isN(q.dist)?q.dist:'—',q&&q.pt||'—',per,g.clock||'--:--'];n=q?(q.last?'Dernière action : '+q.last:''):'Position du ballon non fournie par ESPN pour ce match.';if(q&&!ball(g)&&!n)n='Position du ballon non lisible pour cette action.'}
  else if(g.fin){v=['Terminé','—','—','Final','0:00'];n='Match terminé : plus de position de ballon.'}
  else if(g.canc){v=['Reporté','—','—','—','—'];n='Match reporté ou suspendu.'}
- else{v=['À venir','—','—','—',fmtT(g)];n='Le ballon apparaîtra pendant le match.'}
- $('yardstats').innerHTML=yb(v,(!g.live&&!g.fin&&!g.canc)?'COUP D’ENVOI':'');$('fieldnote').textContent=(g.demo?'DÉMO · données fictives. ':'')+n}
+ else{v=['À venir','—','—','—','15:00'];n='Le ballon apparaîtra pendant le match.'}
+ $('yardstats').innerHTML=yb(v);$('fieldnote').textContent=(g.demo?'DÉMO · données fictives. ':'')+n}
 function allPlays(){const d=S.sumData&&S.sumData.drives;if(!d)return[];const o=[];(d.previous||[]).concat(d.current?[d.current]:[]).forEach(x=>(x.plays||[]).forEach(p=>o.push(p)));return o.sort((a,b)=>(+b.sequenceNumber||0)-(+a.sequenceNumber||0))}
 function renderPlays(){const g=S.feat,el=$('plays');if(!el)return;const btn=$('allbtn');if(btn)btn.textContent=S.allPlays?'MOINS ‹':'TOUTES LES ACTIONS ›';
  if(!g){el.innerHTML='<div class="none">Aucun match sélectionné.</div>';return}
