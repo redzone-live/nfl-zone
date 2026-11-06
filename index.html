@@ -283,7 +283,7 @@ function renderStatsTab(){const el=$('statbox');if(!el)return;const g=S.feat,I=S
  if(I.id!==g.id||I.busy&&!I.sum&&!Object.keys(I.co).length){el.innerHTML='<div class="note">Chargement des statistiques…</div>';return}
  if(!I.sum&&!Object.keys(I.tm).length&&!Object.keys(I.co).length){el.innerHTML='<div class="note">Statistiques indisponibles'+(I.err?' ('+esc(I.err)+')':'')+'.</div>';return}
  el.innerHTML=teamStatsHtml(g)}
-function formBox(g,ab){const I=S.info,sum=I.sum,L=sum&&sum.lastFiveGames,T=L&&L.find(t=>cn(t.team&&t.team.abbreviation)===ab),E=(T&&T.events&&T.events.length)?T.events:((I.hist&&I.hist[ab])||[]);
+function formBox(g,ab){const I=S.info,sum=I.sum,L=sum&&sum.lastFiveGames,T=L&&L.find(t=>cn(t.team&&t.team.abbreviation)===ab),E=(I.hist&&I.hist[ab]&&I.hist[ab].length)?I.hist[ab]:((T&&T.events)||[]);
  const rs=x=>x.gameResult==='W'?['V','w']:x.gameResult==='L'?['D','l']:['N','t'];
  const top='<div style="display:flex;align-items:center;gap:8px;padding:10px 10px 4px;font-weight:800">'+logo(ab,28)+esc(ab)+(E.length?'<span class="fm">'+E.map(x=>{const r=rs(x);return'<b class="'+r[1]+'">'+r[0]+'</b>'}).join('')+'</span>':'')+'</div>';
  if(!E.length)return'<div class="lbox">'+top+'<div class="note" style="margin:6px 10px 10px">Aucun match récent fourni par ESPN.</div></div>';
@@ -303,9 +303,9 @@ async function loadInfo(){const g=S.feat,I=S.info;renderStatsTab();renderHistory
  const one=async ab=>{if(!EID[ab])return;const[t,c]=await Promise.all([tryGet(ESPN+'/teams/'+EID[ab],6e5),tryGet(CORE+'/seasons/'+yr+'/types/'+ty+'/teams/'+EID[ab]+'/statistics',6e5)]);if(t)I.tm[ab]=t;if(c)I.co[ab]=c};
  const sm=async()=>{I.sum=await tryGet(ESPN+'/summary?event='+g.id,3e5)};
  await Promise.all([sm(),one(g.away),one(g.home)]);
- const hist=async ab=>{const L=I.sum&&I.sum.lastFiveGames,T=L&&L.find(t=>cn(t.team&&t.team.abbreviation)===ab);if(T&&(T.events||[]).length)return;if(!EID[ab])return;
+ const hist=async ab=>{const L=I.sum&&I.sum.lastFiveGames,T=L&&L.find(t=>cn(t.team&&t.team.abbreviation)===ab);if(!g.fin&&T&&(T.events||[]).length)return;if(!EID[ab])return;
   const j=await tryGet(ESPN+'/teams/'+EID[ab]+'/schedule?season='+yr,6e5);if(!j)return;
-  I.hist[ab]=(j.events||[]).filter(e=>(!e.seasonType||e.seasonType.id!=='1'&&!/pre/i.test(e.seasonType.name||''))&&Date.parse(e.date||'')<g.ms).map(e=>{
+  I.hist[ab]=(j.events||[]).filter(e=>(!e.seasonType||e.seasonType.id!=='1'&&!/pre/i.test(e.seasonType.name||''))&&Date.parse(e.date||'')<=g.ms).map(e=>{
    const c=(e.competitions||[])[0]||{},C=c.competitors||[],me=C.find(x=>cn(x.team&&x.team.abbreviation)===ab),op=C.find(x=>x!==me);
    if(!me||!op||!(c.status&&c.status.type&&c.status.type.state==='post'))return null;
    const sv=x=>{const z=x.score;return z==null?null:+(z.displayValue!=null?z.displayValue:z.value)},a=sv(me),b=sv(op);if(a==null||b==null||isNaN(a)||isNaN(b))return null;const home=me.homeAway==='home';
