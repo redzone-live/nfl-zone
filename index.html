@@ -163,9 +163,9 @@ function renderMatchStats(){const g=S.feat,el=$('matchstats');if(!el)return;cons
  const T=S.sumData&&S.sumData.boxscore&&S.sumData.boxscore.teams;if(!T||T.length<2){el.innerHTML=h+'<p class="muted">'+(S.sumErr?'Indisponibles ('+esc(S.sumErr)+').':'Non fournies par ESPN pour ce match.')+'</p></div>';return}
  const ta=T.find(x=>cn(x.team&&x.team.abbreviation)===g.away)||T[0],th=T.find(x=>cn(x.team&&x.team.abbreviation)===g.home)||T[1],hm={};(th.statistics||[]).forEach(z=>hm[z.name]=z);
  el.innerHTML=h+'<div class="scroll"><table class="log"><tr><th></th><th>'+esc(g.away)+'</th><th>'+esc(g.home)+'</th></tr>'+(ta.statistics||[]).filter(z=>z.displayValue!=null&&z.displayValue!=='').map(z=>'<tr><td>'+esc(MSL[z.name]||z.label||z.name)+'</td><td>'+esc(z.displayValue)+'</td><td>'+esc(hm[z.name]?hm[z.name].displayValue:'—')+'</td></tr>').join('')+'</table></div><p class="muted" style="font-size:11px">Libellés non traduits : fournis tels quels par ESPN.</p></div>'}
-async function ensureSummary(g){if(!g||g.demo||(!g.live&&!g.fin))return;const chg=S.sumFor!==g.id,stale=chg||(g.live&&Date.now()-S.sumT>25e3)||(!S.sumData&&Date.now()-S.sumT>6e4);if(!stale||S.sumBusy)return;
+async function ensureSummary(g){if(!g||g.demo||(!g.live&&!g.fin))return;const chg=S.sumFor!==g.id,stale=chg||(g.live&&Date.now()-S.sumT>8e3)||(!S.sumData&&Date.now()-S.sumT>6e4);if(!stale||S.sumBusy)return;
  if(chg){S.sumData=null;S.sumErr='';S.allPlays=false}S.sumBusy=true;S.sumFor=g.id;S.sumT=Date.now();
- try{S.sumData=await get(ESPN+'/summary?event='+g.id,g.live?2e4:36e5);S.sumErr=''}catch(e){S.sumErr=e.message}
+ try{S.sumData=await get(ESPN+'/summary?event='+g.id,g.live?6e3:36e5);S.sumErr=''}catch(e){S.sumErr=e.message}
  S.sumBusy=false;if(S.feat&&S.feat.id!==g.id)return ensureSummary(S.feat);renderPlays();renderMatchStats()}
 function fxKind(d){return d>=6&&d<=8?'TOUCHDOWN':d===3?'FIELD GOAL':d===2?'SAFETY':null}
 function scoreFx(){S.sc=S.sc||{};const G=((S.cur&&S.byWeek[WK(S.cur.t,S.cur.w)])||[]).slice();if(S.feat&&S.feat.demo)G.push(S.feat);let hit=null;
@@ -438,7 +438,7 @@ async function diag(){const o=$('diag');o.textContent='Test en cours…';let h='
  if(pid){try{await get(CORE+'/seasons/'+(S.year||new Date().getFullYear())+'/types/2/athletes/'+pid+'/statistics/0',0);h+='✅ Statistiques joueur\n'}catch(e){h+=(e.message==='HTTP 404'?'⚠️ Statistiques joueur — aucune pour ce joueur (normal)':'❌ Statistiques joueur — '+e.message)+'\n'}}
  o.textContent=h}
 let timer;
-function schedule(){clearTimeout(timer);const now=Date.now(),G=allGames(),hot=G.some(g=>g.live||(!g.fin&&!g.canc&&g.ms-now<=18e5&&g.ms-now>=-4*36e5));timer=setTimeout(refresh,hot?3e4:3e5)}
+function schedule(){clearTimeout(timer);const now=Date.now(),G=allGames(),hot=G.some(g=>g.live||(!g.fin&&!g.canc&&g.ms-now<=18e5&&g.ms-now>=-4*36e5));timer=setTimeout(refresh,G.some(g=>g.live)?1e4:hot?3e4:3e5)}
 async function refresh(){if(document.hidden||S.demo)return schedule();
  try{const j=await get(ESPN+'/scoreboard',0),t=(j.season&&j.season.type)||2,w=(j.week&&j.week.number)||0;
   if(j.season&&j.season.year)S.year=j.season.year;S.byWeek[WK(t,w)]=(j.events||[]).map(ng).filter(g=>g.home&&g.away);S.cur={t,w};
