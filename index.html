@@ -137,7 +137,7 @@ function ball(g){const q=g&&g.live&&g.sit;if(!q)return null;const m=String(q.pt|
  const dir=q.poss&&q.poss===g.aid?1:(q.poss&&q.poss===g.hid?-1:0);
  let fd=null;if(dir&&isN(q.dist))fd=Math.max(0,Math.min(100,yd+dir*(+q.dist)));
  return{yd,dir,fd}}
-const yb=(a,k,o)=>['SITUATION','YARDS À PARCOURIR','POSITION DU BALLON','QUART-TEMPS',k||'TEMPS RESTANT'].map((l,i)=>o&&i===2?'<div><b>'+esc(o.own)+'</b><span>BALLON · '+esc(String(o.pt||'').toUpperCase())+'</span></div>':'<div><b>'+esc(a[i])+'</b><span>'+l+'</span></div>').join('');
+const yb=(a,k)=>['SITUATION','YARDS À PARCOURIR','POSITION DU BALLON','QUART-TEMPS',k||'TEMPS RESTANT'].map((l,i)=>'<div><b>'+esc(a[i])+'</b><span>'+l+'</span></div>').join('');
 function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?[g.away,g.home,g.ac,g.hc].join('|'):'-';if(S.fkey!==fk){$('fstat').innerHTML=fieldSvg(g);S.fkey=fk}setBall(ball(g),g?g.id:'');const db=$('demobtn');if(db)db.textContent=S.demo?'■ Arrêter la démo':'▶ Voir une démo du direct';
  if(!g){$('ftitle').innerHTML='TERRAIN <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';$('fieldnote').textContent='';$('yardstats').innerHTML=yb(['—','—','—','—','—']);return}
  $('ftitle').innerHTML='TERRAIN · '+esc(g.away)+' – '+esc(g.home)+(g.demo?' · <span style="color:#ffb347">DÉMO</span>':g.live?' · <span style="color:#ff6b6b">EN DIRECT</span>':'')+' <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';
@@ -146,7 +146,7 @@ function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?
  else if(g.fin){v=['Terminé','—','—','Final','0:00'];n='Match terminé : plus de position de ballon.'}
  else if(g.canc){v=['Reporté','—','—','—','—'];n='Match reporté ou suspendu.'}
  else{v=['À venir','—','—','—','15:00'];n='Le ballon apparaîtra pendant le match.'}
- const own=g.live&&q&&q.poss&&q.poss===g.aid?g.away:(g.live&&q&&q.poss&&q.poss===g.hid?g.home:'');$('yardstats').innerHTML=yb(v,undefined,own?{own:own,pt:q.pt}:null);$('fieldnote').textContent=(g.demo?'DÉMO · données fictives. ':'')+n}
+ $('yardstats').innerHTML=yb(v);$('fieldnote').textContent=(g.demo?'DÉMO · données fictives. ':'')+n}
 function allPlays(){const d=S.sumData&&S.sumData.drives;if(!d)return[];const o=[],seen={};(d.previous||[]).concat(d.current?[d.current]:[]).forEach(x=>(x.plays||[]).forEach(p=>{const k=String(p.id||'')+'|'+String(p.sequenceNumber||'')+'|'+String(p.text||'');if(!seen[k]){seen[k]=1;o.push(p)}}));return o.sort((a,b)=>(+b.sequenceNumber||0)-(+a.sequenceNumber||0))}
 function renderPlays(){const g=S.feat,el=$('plays');if(!el)return;const btn=$('allbtn');if(btn)btn.textContent=S.allPlays?'MOINS ‹':'TOUTES LES ACTIONS ›';
  if(!g){el.innerHTML='<div class="none">Aucun match sélectionné.</div>';return}
@@ -465,7 +465,7 @@ const EX=new Map(),PH=[];D.forEach(([f,e])=>{const k=f.toLowerCase();if(f.indexO
 PH.sort((a,b)=>b[0].length-a[0].length);const PM=new Map(PH);
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const RX=new RegExp(PH.map(x=>esc(x[0])).join('|'),'gi');
 const up=x=>x.length>1&&x===x.toUpperCase()&&x!==x.toLowerCase();
-const RULES=[[/\bSEMAINE (\d+)/gi,'WEEK $1'],[/^BALLON · /,'BALL · '],[/\bTOUR (\d+)/gi,'ROUND $1'],[/\bPré (\d+)/g,'Pre $1'],[/(\S+\.\S+) passe à (\S+) pour/g,'$1 pass to $2 for'],[/ passe incomplète/g,' pass incomplete'],[/ course pour /g,' rush for '],[/ sacké pour /g,' sacked for '],[/\bPuis\b/g,'Then'],[/\bSaison (\d{4})/g,'Season $1'],[/\bS(\d{1,2})\b/g,'W$1'],[/\bCalendrier (\d{4})/g,'Schedule $1'],[/\bStatistiques (?=[A-Z0-9])/g,'Stats '],[/\b(AFC|NFC) (Est|Nord|Sud|Ouest)\b/g,(m,c,d)=>c+' '+({Est:'East',Nord:'North',Sud:'South',Ouest:'West'})[d]]];
+const RULES=[[/\bSEMAINE (\d+)/gi,'WEEK $1'],[/\bTOUR (\d+)/gi,'ROUND $1'],[/\bPré (\d+)/g,'Pre $1'],[/(\S+\.\S+) passe à (\S+) pour/g,'$1 pass to $2 for'],[/ passe incomplète/g,' pass incomplete'],[/ course pour /g,' rush for '],[/ sacké pour /g,' sacked for '],[/\bPuis\b/g,'Then'],[/\bSaison (\d{4})/g,'Season $1'],[/\bS(\d{1,2})\b/g,'W$1'],[/\bCalendrier (\d{4})/g,'Schedule $1'],[/\bStatistiques (?=[A-Z0-9])/g,'Stats '],[/\b(AFC|NFC) (Est|Nord|Sud|Ouest)\b/g,(m,c,d)=>c+' '+({Est:'East',Nord:'North',Sud:'South',Ouest:'West'})[d]]];
 const C=new Map();
 function tr(v){if(!v||!/[A-Za-zÀ-ÿ]/.test(v))return v;const hit=C.get(v);if(hit!==undefined)return hit;
  const t=v.trim();let out=v;const lc=t.toLowerCase();
