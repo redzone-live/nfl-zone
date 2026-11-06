@@ -147,7 +147,7 @@ function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?
  else if(g.canc){v=['Reporté','—','—','—','—'];n='Match reporté ou suspendu.'}
  else{v=['À venir','—','—','—','15:00'];n='Le ballon apparaîtra pendant le match.'}
  $('yardstats').innerHTML=yb(v);$('fieldnote').textContent=(g.demo?'DÉMO · données fictives. ':'')+n}
-function allPlays(){const d=S.sumData&&S.sumData.drives;if(!d)return[];const o=[];(d.previous||[]).concat(d.current?[d.current]:[]).forEach(x=>(x.plays||[]).forEach(p=>o.push(p)));return o.sort((a,b)=>(+b.sequenceNumber||0)-(+a.sequenceNumber||0))}
+function allPlays(){const d=S.sumData&&S.sumData.drives;if(!d)return[];const o=[],seen={};(d.previous||[]).concat(d.current?[d.current]:[]).forEach(x=>(x.plays||[]).forEach(p=>{const k=String(p.id||'')+'|'+String(p.sequenceNumber||'')+'|'+String(p.text||'');if(!seen[k]){seen[k]=1;o.push(p)}}));return o.sort((a,b)=>(+b.sequenceNumber||0)-(+a.sequenceNumber||0))}
 function renderPlays(){const g=S.feat,el=$('plays');if(!el)return;const btn=$('allbtn');if(btn)btn.textContent=S.allPlays?'MOINS ‹':'TOUTES LES ACTIONS ›';
  if(!g){el.innerHTML='<div class="none">Aucun match sélectionné.</div>';return}
  if(!g.live&&!g.fin){el.innerHTML='<div class="none">Les actions apparaîtront pendant le match.</div>';return}
