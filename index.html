@@ -141,19 +141,22 @@ function fieldSvg(g){const ac=lift(g&&g.ac),hc=lift(g&&g.hc);
  o+=vl(0,1.6,3.2,'#fff',.95)+vl(100,1.6,3.2,'#fff',.95)+zoneLogo(g&&g.away,true)+zoneLogo(g&&g.home,false);
  return o}
 function drawDyn(){const el=$('fdyn'),d=S.fd;if(!el)return;if(d.yd==null){el.innerHTML='';return}
- let o='';const ta=FP(d.yd,0),tb=FP(d.yd,53.3),pt=FP(d.yd,26.65),v=.5,rx=11+7*v;
- if(d.fdv!=null){const t=FP(d.fdv,0),m=FP(d.fdv,53.3);o+='<line x1="'+t[0]+'" y1="'+t[1]+'" x2="'+m[0]+'" y2="'+m[1]+'" stroke="#ffd400" stroke-width="3" stroke-opacity=".95"/>'}
- o+='<line x1="'+ta[0]+'" y1="'+ta[1]+'" x2="'+tb[0]+'" y2="'+tb[1]+'" stroke="#2f9bff" stroke-width="2.4"/>';
+ let o='';const ta=FP(d.yd,0),tb=FP(d.yd,53.3);let pt=FP(d.yd,26.65);const v=.5,rx=11+7*v,ar=d.arc;
+ if(ar){const A=FP(ar.from,26.65),B=FP(ar.to,26.65),C=[(A[0]+B[0])/2,Math.min(A[1],B[1])-95],t=Math.max(0,Math.min(1,(d.yd-ar.from)/(ar.to-ar.from))),u=1-t;
+  pt=[u*u*A[0]+2*u*t*C[0]+t*t*B[0],u*u*A[1]+2*u*t*C[1]+t*t*B[1]];
+  o+='<path d="M'+A[0]+' '+A[1]+' Q'+C[0]+' '+C[1]+' '+B[0]+' '+B[1]+'" stroke="#fff" stroke-width="2.2" stroke-dasharray="2 6" stroke-linecap="round" fill="none" opacity=".9"/><circle cx="'+A[0]+'" cy="'+A[1]+'" r="3.5" fill="#2f9bff"/>'}
+ if(!ar&&d.fdv!=null){const t=FP(d.fdv,0),m=FP(d.fdv,53.3);o+='<line x1="'+t[0]+'" y1="'+t[1]+'" x2="'+m[0]+'" y2="'+m[1]+'" stroke="#ffd400" stroke-width="3" stroke-opacity=".95"/>'}
+ if(!ar)o+='<line x1="'+ta[0]+'" y1="'+ta[1]+'" x2="'+tb[0]+'" y2="'+tb[1]+'" stroke="#2f9bff" stroke-width="2.4"/>';
  o+='<g transform="translate('+pt[0]+','+pt[1]+')"><ellipse cx="2" cy="6" rx="'+rx+'" ry="'+rx*.35+'" fill="#000" opacity=".4"/><ellipse rx="'+rx+'" ry="'+rx*.58+'" fill="#8b4a17" stroke="#fff" stroke-width="1.4"/><line x1="'+-rx*.4+'" y1="0" x2="'+rx*.4+'" y2="0" stroke="#fff" stroke-width="1.4"/></g>';
- if(d.dir){const q=FP(d.yd+d.dir*5,26.65);o+='<polygon points="'+q[0]+','+(q[1]-6)+' '+(q[0]+d.dir*10)+','+q[1]+' '+q[0]+','+(q[1]+6)+'" fill="#fff" opacity=".95"/>'}
+ if(d.dir&&!ar){const q=FP(d.yd+d.dir*5,26.65);o+='<polygon points="'+q[0]+','+(q[1]-6)+' '+(q[0]+d.dir*10)+','+q[1]+' '+q[0]+','+(q[1]+6)+'" fill="#fff" opacity=".95"/>'}
  el.innerHTML=o}
 function setBall(b,key){const d=S.fd;
- if(!b){if(d.raf&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(d.raf);d.yd=null;d.fdv=null;d.dir=0;return drawDyn()}
- d.dir=b.dir;if(d.yd==null||d.key!==key||typeof requestAnimationFrame!=='function'){d.yd=b.yd;d.fdv=b.fd;d.key=key;return drawDyn()}
+ if(!b){if(d.raf&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(d.raf);d.arc=null;d.yd=null;d.fdv=null;d.dir=0;return drawDyn()}
+ d.dir=b.dir;d.arc=b.arc||null;if(d.yd==null||d.key!==key||typeof requestAnimationFrame!=='function'){d.yd=b.yd;d.fdv=b.fd;d.key=key;return drawDyn()}
  if(d.raf)cancelAnimationFrame(d.raf);const y0=d.yd,f0=d.fdv==null?b.fd:d.fdv,t0=Date.now();
  const step=()=>{let t=Math.min(1,(Date.now()-t0)/1400);t=t*t*(3-2*t);d.yd=y0+(b.yd-y0)*t;d.fdv=(b.fd==null||f0==null)?b.fd:f0+(b.fd-f0)*t;drawDyn();if(t<1)d.raf=requestAnimationFrame(step)};step()}
 function ball(g){const q=g&&g.live&&g.sit;if(!q)return null;
- if(S.td&&g.id===S.td.id&&Date.now()<S.td.until)return{yd:S.td.yd,dir:0,fd:null};const m=String(q.pt||q.dd||'').match(/([A-Z]{2,3})\s+(\d{1,2})(?!\d)/g);let yd=null;
+ if(S.kick&&g.id===S.kick.id&&Date.now()<S.kick.until)return{yd:S.kick.to,dir:0,fd:null,arc:S.kick};if(S.td&&g.id===S.td.id&&Date.now()<S.td.until)return{yd:S.td.yd,dir:0,fd:null};const m=String(q.pt||q.dd||'').match(/([A-Z]{2,3})\s+(\d{1,2})(?!\d)/g);let yd=null;
  if(m){const z=m[m.length-1].match(/([A-Z]{2,3})\s+(\d{1,2})/),tm=cn(z[1]),n=+z[2];yd=tm===g.away?n:tm===g.home?100-n:(n===50?50:null)}
  if(yd==null||yd<0||yd>100)return null;
  const dir=q.poss&&q.poss===g.aid?1:(q.poss&&q.poss===g.hid?-1:0);
@@ -190,12 +193,16 @@ async function ensureSummary(g){if(!g||g.demo||(!g.live&&!g.fin))return;const ch
  try{S.sumData=await get(ESPN+'/summary?event='+g.id,g.live?6e3:36e5);S.sumErr=''}catch(e){S.sumErr=e.message}
  S.sumBusy=false;if(S.feat&&S.feat.id!==g.id)return ensureSummary(S.feat);renderPlays();renderMatchStats()}
 function fxKind(d,post){return d>=6&&d<=8?'TOUCHDOWN':d===3?'FIELD GOAL':d===1?'EXTRA POINT':d===2?(post?'2-POINT CONVERSION':'SAFETY'):null}
+function startKick(g,t,fg){const away=t===g.away,y=S.fd&&S.fd.yd,ok=fg&&y!=null&&(away?y>=50&&y<=96:y>=4&&y<=50),from=ok?y:(fg?(away?82:18):(away?85:15));
+ S.td=null;S.kick={id:g.id,until:Date.now()+30e3,from:from,to:away?109.5:-9.5};const d=S.fd;d.yd=from;d.fdv=null;setBall(ball(g),g.id)}
 function scoreFx(){S.sc=S.sc||{};const G=((S.cur&&S.byWeek[WK(S.cur.t,S.cur.w)])||[]).slice();if(S.feat&&S.feat.demo)G.push(S.feat);let hit=null;
  G.forEach(g=>{const a=g.as,h=g.hs,p=S.sc[g.id];if(a==null||h==null){return}S.sc[g.id]={a:a,h:h};
   if(!p||!S.feat||g.id!==S.feat.id||!(g.live||g.demo||g.fin))return;
   const da=a-p.a,dh=h-p.h;let t=null,k=null;const rc=tm=>!!(S.lastTd&&S.lastTd.t===tm&&Date.now()-S.lastTd.ts<12e4);if(dh>0&&fxKind(dh,rc(g.home))){t=g.home;k=fxKind(dh,rc(g.home))}else if(da>0&&fxKind(da,rc(g.away))){t=g.away;k=fxKind(da,rc(g.away))}
-  if(k){hit={k:k,t:t,g:g};if(k==='TOUCHDOWN')S.lastTd={t:t,ts:Date.now()}}});
- if(hit&&hit.k==='TOUCHDOWN'&&!hit.g.demo&&hit.g.id===(S.feat&&S.feat.id)){S.td={id:hit.g.id,until:Date.now()+30e3,yd:hit.t===hit.g.away?104.5:-4.5};try{setBall(ball(S.feat),S.feat.id)}catch(e){}}
+  if(k){hit={k:k,t:t,g:g,n:t===g.home?dh:da};if(k==='TOUCHDOWN')S.lastTd={t:t,ts:Date.now()}}});
+ if(hit&&hit.k==='TOUCHDOWN'&&!hit.g.demo&&hit.g.id===(S.feat&&S.feat.id)){const xp=hit.n===7;S.kick=null;S.td={id:hit.g.id,until:Date.now()+(xp?4e3:30e3),yd:hit.t===hit.g.away?104.5:-4.5};try{setBall(ball(S.feat),S.feat.id)}catch(e){}
+  if(xp){const gid=hit.g.id,tm=hit.t;setTimeout(()=>{try{if(S.feat&&S.feat.id===gid)startKick(S.feat,tm,false)}catch(e){}},4e3)}}
+ if(hit&&(hit.k==='FIELD GOAL'||hit.k==='EXTRA POINT')&&hit.g.id===(S.feat&&S.feat.id))startKick(hit.g,hit.t,hit.k==='FIELD GOAL');
  if(hit)fxShow(hit.k,hit.t,hit.g)}
 let fxTimer=0;
 function fxShow(k,t,g){const el=$('scorefx');if(!el)return;const col=lift(t===g.home?g.hc:g.ac),nm=TN[t]?TN[t][1].toUpperCase():t;
