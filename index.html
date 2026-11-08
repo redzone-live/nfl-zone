@@ -647,10 +647,14 @@ N.v='games';N.tq='';N.tc='all';N.teams=[];N.tbusy=false;N.terr='';
 const NCONF=[[5,'Big Ten'],[8,'SEC'],[1,'ACC'],[4,'Big 12'],[18,'Indépendants'],[151,'American'],[17,'Mountain West'],[37,'Sun Belt'],[15,'MAC'],[12,'Conference USA'],[9,'Pac-12']],NMAIN=['Big Ten','SEC','ACC','Big 12','Indépendants'];
 const NTU=g=>'https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?groups='+g+'&limit=300';
 const nTL=j=>{const L=j&&j.sports&&j.sports[0]&&j.sports[0].leagues&&j.sports[0].leagues[0]&&j.sports[0].leagues[0].teams||[];return L.map(x=>{const t=x.team||x;return{id:String(t.id),n:t.shortDisplayName||t.displayName||t.name||'',full:t.displayName||'',ab:t.abbreviation||'',c:String(t.color||'1c3a63').replace('#',''),lg:(t.logos&&t.logos[0]&&t.logos[0].href)||t.logo||'',cf:''}})};
-async function nLoadTeams(){if(N.teams.length||N.tbusy){nRender();return}N.tbusy=true;N.terr='';N.tdiag='';nRender();
+const nTS=j=>{const m={};((j&&j.events)||[]).forEach(e=>(((e.competitions||[])[0]||{}).competitors||[]).forEach(c=>{const t=c.team||{};if(t.id&&!m[t.id])m[t.id]={id:String(t.id),n:t.shortDisplayName||t.displayName||'',full:t.displayName||'',ab:t.abbreviation||'',c:String(t.color||'1c3a63').replace('#',''),lg:t.logo||(t.logos&&t.logos[0]&&t.logos[0].href)||'',cf:''}}));return Object.keys(m).map(k=>m[k])};
+async function nLoadTeams(){if(N.teams.length||N.tbusy){nRender();return}
+ try{const c=JSON.parse(localStorage.getItem('nflzone-nteams')||'null');if(c&&c.l&&c.l.length>40&&Date.now()-c.t<6048e5){N.teams=c.l;nRender();return}}catch(e){}
+ N.tbusy=true;N.terr='';N.tdiag='';nRender();
  const B='https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams',dg=[];let L=[];
  for(const u of [NTU(80).replace('limit=300','limit=500'),B+'?limit=1000',B]){try{L=nTL(await get(u,6e5));if(L.length)break}catch(e){dg.push(/^HTTP/.test(e.message||'')?e.message:'réseau')}}
- if(L.length)N.teams=L.sort((a,b)=>a.n.localeCompare(b.n));
+ if(!L.length){try{const d=nET(new Date());L=nTS(await get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates='+nShift(d,-8)+'-'+nShift(d,7)+'&groups=80&limit=500',6e5))}catch(e){dg.push('sb:'+(/^HTTP/.test(e.message||'')?e.message:'réseau'))}}
+ if(L.length){N.teams=L.sort((a,b)=>a.n.localeCompare(b.n));try{localStorage.setItem('nflzone-nteams',JSON.stringify({t:Date.now(),l:N.teams}))}catch(e){}}
  else{N.terr=JT('La liste des équipes est indisponible pour le moment.','The team list is unavailable right now.');N.tdiag=dg.join(' · ')}
  N.tbusy=false;if(LG==='ncaa')nRender()}
 function nGrid(){const g=document.getElementById('ntg');if(!g)return;const q=(N.tq||'').trim().toLowerCase();
