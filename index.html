@@ -163,11 +163,12 @@ function ball(g){const q=g&&g.live&&g.sit;if(!q)return null;
  let fd=null;if(dir&&isN(q.dist))fd=Math.max(0,Math.min(100,yd+dir*(+q.dist)));
  return{yd,dir,fd}}
 const yb=(a,k)=>['SITUATION','YARDS À PARCOURIR','POSITION DU BALLON','QUART-TEMPS',k||'TEMPS RESTANT'].map((l,i)=>'<div><b>'+esc(a[i])+'</b><span>'+l+'</span></div>').join('');
+function posLab(g,q){if(!q||!q.pt)return'—';const m=String(q.pt).match(/^\s*([A-Z]{2,3})\s+(\d{1,2})\s*$/),t=q.poss&&String(q.poss)===String(g.aid)?g.away:(q.poss&&String(q.poss)===String(g.hid)?g.home:null);return m&&t?t+' '+m[2]:q.pt}
 function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?[g.away,g.home,g.ac,g.hc].join('|'):'-';if(S.fkey!==fk){$('fstat').innerHTML=fieldSvg(g);S.fkey=fk}setBall(ball(g),g?g.id:'');const db=$('demobtn');if(db)db.textContent=S.demo?'■ Arrêter la démo':'▶ Voir une démo du direct';
  if(!g){$('ftitle').innerHTML='TERRAIN <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';$('fieldnote').textContent='';$('yardstats').innerHTML=yb(['—','—','—','—','—']);return}
  $('ftitle').innerHTML='TERRAIN · '+esc(g.away)+' – '+esc(g.home)+(g.demo?' · <span style="color:#ffb347">DÉMO</span>':g.live?' · <span style="color:#ff6b6b">EN DIRECT</span>':'')+' <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';
  const q=g.sit,per=g.half?'MT':(g.period>4?'OT':'Q'+g.period);let v,n='';
- if(g.live){v=[q&&(q.sd||q.dd)||'En cours',q&&isN(q.dist)?q.dist:'—',q&&q.pt||'—',per,g.clock||'--:--'];n=q?(q.last?'Dernière action : '+q.last:''):'Position du ballon non fournie par ESPN pour ce match.';if(q&&!ball(g)&&!n)n='Position du ballon non lisible pour cette action.'}
+ if(g.live){v=[q&&(q.sd||q.dd)||'En cours',q&&isN(q.dist)?q.dist:'—',posLab(g,q),per,g.clock||'--:--'];n=q?(q.last?'Dernière action : '+q.last:''):'Position du ballon non fournie par ESPN pour ce match.';if(q&&!ball(g)&&!n)n='Position du ballon non lisible pour cette action.'}
  else if(g.fin){v=['Terminé','—','—','Final','0:00'];n='Match terminé : plus de position de ballon.'}
  else if(g.canc){v=['Reporté','—','—','—','—'];n='Match reporté ou suspendu.'}
  else{v=['À venir','—','—','—','15:00'];n='Le ballon apparaîtra pendant le match.'}
