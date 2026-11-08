@@ -228,8 +228,17 @@ const INJRX=/\b(injur(?:y|ed|ies)|concussion|locker room|will not return|ruled o
 const INJFR={Knee:'Genou',Ankle:'Cheville',Hamstring:'Ischio-jambiers',Concussion:'Commotion',Shoulder:'Épaule',Back:'Dos',Calf:'Mollet',Groin:'Aine',Foot:'Pied',Hip:'Hanche',Thigh:'Cuisse',Illness:'Maladie',Quadricep:'Quadriceps',Quad:'Quadriceps',Neck:'Cou',Elbow:'Coude',Wrist:'Poignet',Hand:'Main',Ribs:'Côtes',Rib:'Côte',Toe:'Orteil',Achilles:'Tendon d’Achille',Head:'Tête',Finger:'Doigt',Chest:'Poitrine',Abdomen:'Abdomen',Shin:'Tibia',Thumb:'Pouce',Heel:'Talon',Biceps:'Biceps',Triceps:'Triceps',Pectoral:'Pectoral',Knee:'Genou'};
 const injKind=t=>{t=String(t||'');return /\bout\b|reserve|\bIR\b|will not return|ruled out/i.test(t)?'out':(/\bactive\b|returned to the game|returns? to the game/i.test(t)?'back':(/doubt|question|day-to-day|evaluat|concuss|locker|x-?ray|check|cart/i.test(t)?'unc':'hurt'))};
 const injNk=n=>{n=String(n||'').trim();const m=/^([A-Za-z])\.\s*(.+)$/.exec(n);let a,b;if(m){a=m[1];b=m[2]}else{const w=n.split(/\s+/);a=(w[0]||'')[0]||'';b=w[w.length-1]||''}return(a+b).toLowerCase().replace(/[^a-z]/g,'')};
-function injGet(g){if(S.ij&&S.ij.id===g.id)return S.ij;let o={id:g.id,ev:[],base:null,seen:{}};if(!g.demo){try{const j=JSON.parse(localStorage.getItem('nflzone-inj-'+g.id)||'null');if(j&&j.id===g.id)o=j}catch(e){}}S.ij=o;return o}
-function injSave(){const I=S.ij;if(!I||I.id==='demo')return;try{localStorage.setItem('nflzone-inj-'+I.id,JSON.stringify({id:I.id,ev:I.ev,base:I.base,seen:I.seen}))}catch(e){}}
+function injGet(g){if(S.ij&&S.ij.id===g.id)return S.ij;let o={id:g.id,ev:[],base:null,seen:{},v:2};if(!g.demo){try{const j=JSON.parse(localStorage.getItem('nflzone-inj-'+g.id)||'null');if(j&&j.id===g.id)o=j}catch(e){}}if(o.v!==2){o.ev=(o.ev||[]).filter(e=>e.src!=='play');o.seen={};o.v=2}S.ij=o;return o}
+function injSave(){const I=S.ij;if(!I||I.id==='demo')return;try{localStorage.setItem('nflzone-inj-'+I.id,JSON.stringify({id:I.id,ev:I.ev,base:I.base,seen:I.seen,v:2}))}catch(e){}}
+const INJPH='(?:was injured|is injured|injured|hurt|limps?|limped|shaken|returns?|returned|is being|is questionable|is doubtful|is out|will not|has been|went to|walks? off|is down|remains? down|stays? down|is evaluated|is checked)';
+function injWho(tx){let m=new RegExp("(?:\\b([A-Z]{2,3})-)?([A-Z]\\.[A-Za-z'’\\-]+)\\s+"+INJPH,'i').exec(tx);if(m)return{n:m[2],t:m[1]?cn(m[1]):''};
+ const a=[],re=/\b([A-Z]{2,3})-([A-Z]\.[A-Za-z'’\-]+)/g;let z;while((z=re.exec(tx)))a.push(z);if(a.length)return{n:a[a.length-1][2],t:cn(a[a.length-1][1])};return null}
+async function injRoster(ab){S.injR=S.injR||{};if(S.injR[ab])return S.injR[ab];const M={};try{const j=await get(ESPN+'/teams/'+EID[ab]+'/roster',36e5);(j.athletes||[]).forEach(g=>{const it=Array.isArray(g.items)?g.items:(g&&g.id?[g]:[]);it.forEach(a=>{const nm=a.fullName||a.displayName||'';if(!nm)return;const k=injNk(nm);(M[k]=M[k]||[]).push({id:String(a.id||''),pos:(a.position&&a.position.abbreviation)||'',ph:(a.headshot&&a.headshot.href)||''})})})}catch(e){return M}S.injR[ab]=M;return M}
+async function injFill(g){if(!g||g.demo||S.injFilling)return;const I=S.ij;if(!I||I.id!==g.id)return;const need=I.ev.filter(e=>!e.ph&&!/^\d+$/.test(e.id)&&!e.nf);if(!need.length)return;S.injFilling=true;let ch=false;
+ try{const R={};for(const ab of [g.away,g.home])if(EID[ab])R[ab]=await injRoster(ab);
+  need.forEach(e=>{const tms=e.tm&&R[e.tm]?[e.tm]:Object.keys(R);for(const ab of tms){const c=(R[ab]||{})[injNk(e.name)];if(c&&c.length===1){e.tm=ab;e.pos=e.pos||c[0].pos;e.ph=c[0].ph||lcdn(c[0].id);e.rid=c[0].id;ch=true;break}}
+   if(!e.ph&&R.length!==0&&Object.keys(R).every(ab=>R[ab]&&Object.keys(R[ab]).length))e.nf=1})}catch(e){}
+ S.injFilling=false;if(ch){injSave();try{renderInj();if($('injsheet')&&$('injsheet').classList.contains('on'))injSheet()}catch(e){}}}
 function injUpdate(g){if(!g||g.demo||(!g.live&&!g.fin))return;const I=injGet(g);let ch=false;
  const L=S.sumFor===g.id&&S.sumData&&S.sumData.injuries;
  if(Array.isArray(L)){const cur={};
@@ -240,15 +249,15 @@ function injUpdate(g){if(!g||g.demo||(!g.live&&!g.fin))return;const I=injGet(g);
    else if(e.st!==c.st){e.st=c.st;e.k=kd;if(c.det)e.det=c.det;ch=true}});
   I.ev.forEach(e=>{if(e.src==='sum'&&!cur[e.id]&&e.k!=='back'){e.k='back';e.st='Active';ch=true}})}
  allPlays().forEach(p=>{const tx=String(p.text||p.shortText||'');if(!INJRX.test(tx+' '+((p.type&&p.type.text)||'')))return;const key=String(p.id||p.sequenceNumber||tx);if(I.seen[key])return;I.seen[key]=1;ch=true;
-  const m=/\b([A-Z]\.[A-Za-z'’\-]+)/.exec(tx);if(!m)return;const nk=injNk(m[1]),kd=injKind(tx),e=I.ev.find(x=>injNk(x.name)===nk);
+  const pw=injWho(tx);if(!pw)return;const nk=injNk(pw.n),kd=injKind(tx),e=I.ev.find(x=>injNk(x.name)===nk&&(!pw.t||!x.tm||x.tm===pw.t));
   if(e){if(kd!=='hurt'&&e.k!==kd){e.k=kd;if(e.src==='play')e.det=tx.slice(0,140)}}
-  else I.ev.push({id:'p'+key,name:m[1],tm:'',pos:'',st:'',k:kd,det:tx.slice(0,140),ph:'',q:(p.period&&p.period.number)||g.period||0,ck:(p.clock&&p.clock.displayValue)||'',src:'play'})});
- if(ch)injSave()}
+  else I.ev.push({id:'p'+key,name:pw.n,tm:pw.t,pos:'',st:'',k:kd,det:tx.slice(0,140),ph:'',q:(p.period&&p.period.number)||g.period||0,ck:(p.clock&&p.clock.displayValue)||'',src:'play'})});
+ if(ch)injSave();injFill(g)}
 const INJDEMO=[{id:'d1',name:'L.Martin',tm:'BUF',pos:'RB',st:'Questionable',k:'unc',det:'Ankle',ph:'',q:1,ck:'8:14'},{id:'d2',name:'D.Reed',tm:'KC',pos:'WR',st:'Out',k:'out',det:'Knee',ph:'',q:1,ck:'3:40'},{id:'d3',name:'T.Hall',tm:'KC',pos:'CB',st:'Active',k:'back',det:'',ph:'',q:1,ck:'11:02'}];
 function injList(g){if(!g)return[];if(g.demo){if(!S.ijd)S.ijd=INJDEMO.map(x=>Object.assign({},x));return S.ijd}return S.ij&&S.ij.id===g.id?S.ij.ev:injGet(g).ev}
 function renderInj(){const r=$('injrow');if(!r)return;const g=S.feat,L=g?injList(g):[];if(!g||!L.length){r.style.display='none';return}
  r.style.display='flex';r.innerHTML='<button type="button" class="injbtn" data-inj="1"><span style="font-size:18px">🩺</span> '+JT('Blessés','Injuries')+' <span class="injn">'+L.length+'</span></button>'}
-function injTxt(e){let d=String(e.det||'');if(e.src==='play')return LANG==='fr'?frP(d,{}):d;return LANG==='fr'?d.split(/\s+/).map(w=>INJFR[w]||w).join(' '):d}
+function injTxt(e){let d=String(e.det||'');if(e.src==='play'){if(/was injured/i.test(d))return JT('Blessé pendant l’action','Injured on the play');if(/return(s|ed) to the game/i.test(d))return JT('Est revenu au jeu','Returned to the game');return LANG==='fr'?frP(d,{}):d}return LANG==='fr'?d.split(/\s+/).map(w=>INJFR[w]||w).join(' '):d}
 function injSheet(){const g=S.feat;if(!g)return;const L=injList(g).slice().reverse(),o={out:0,unc:1,hurt:2,back:3},C={out:['#ff5a6e',JT('NE REVIENDRA PAS','WON’T RETURN')],unc:['#ffb347',JT('RETOUR INCERTAIN','RETURN UNCERTAIN')],hurt:['#ffb347',JT('BLESSÉ','HURT')],back:['#4ad37b',JT('DE RETOUR','BACK')]};
  L.sort((a,b)=>o[a.k]-o[b.k]);
  let el=$('injsheet');if(!el){document.body.insertAdjacentHTML('beforeend','<div id="injsheet" class="injsheet"></div>');el=$('injsheet')}
