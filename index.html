@@ -128,6 +128,7 @@ function fpoly(a,b,c,d,fill,extra){const p=[FP(a,b),FP(c,b),FP(c,d),FP(a,d)].map
 function vl(x,w0,w1,col,op){const a=FP(x,0),b=FP(x,53.3);return'<polygon points="'+(a[0]-w0/2).toFixed(1)+','+a[1].toFixed(1)+' '+(a[0]+w0/2).toFixed(1)+','+a[1].toFixed(1)+' '+(b[0]+w1/2).toFixed(1)+','+b[1].toFixed(1)+' '+(b[0]-w1/2).toFixed(1)+','+b[1].toFixed(1)+'" fill="'+col+'" fill-opacity="'+op+'"/>'}
 function nTxt(t,x,y,up){const o=FP(x,y),b=up?[1,0]:[-1,0],dn=up?[0,1]:[0,-1],f=d=>{const q=FP(x+d[0],y+d[1]);return[q[0]-o[0],q[1]-o[1]]},mx=f(b),my=f(dn);
  return'<g transform="matrix('+mx.map(v=>v.toFixed(3)).join(',')+','+my.map(v=>v.toFixed(3)).join(',')+','+o[0].toFixed(1)+','+o[1].toFixed(1)+')"><text text-anchor="middle" dominant-baseline="central" font-size="4" font-weight="800" fill="#fff" fill-opacity=".82" letter-spacing=".5" font-family="Arial,Helvetica,sans-serif">'+t+'</text></g>'}
+const fFlip=g=>!!g&&!g.demo&&(g.period===2||g.period===3);
 function fieldSvg(g){const ac=lift(g&&g.ac),hc=lift(g&&g.hc);
  let o='<defs><linearGradient id="fdp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".6" stop-color="#000" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient><radialGradient id="fds" cx=".5" cy=".7" r=".55"><stop offset="0" stop-color="#fff" stop-opacity=".17"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="fez" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".38"/><stop offset="1" stop-color="#000" stop-opacity=".02"/></linearGradient></defs>';
  o+=fpoly(-.6,0,100.6,53.3,'#1d6b2d');
@@ -140,15 +141,15 @@ function fieldSvg(g){const ac=lift(g&&g.ac),hc=lift(g&&g.hc);
  o+='<polygon points="89,118 139,118 52,259 0,259 0,220" fill="'+ac+'"/><polygon points="545,118 594,118 682,215 682,259 635,259" fill="'+hc+'"/><polygon points="89,118 139,118 52,259 0,259 0,220" fill="url(#fez)"/><polygon points="545,118 594,118 682,215 682,259 635,259" fill="url(#fez)"/>';
  o+=vl(0,1.6,3.2,'#fff',.95)+vl(100,1.6,3.2,'#fff',.95)+zoneLogo(g&&g.away,true)+zoneLogo(g&&g.home,false);
  return o}
-function drawDyn(){const el=$('fdyn'),d=S.fd;if(!el)return;if(d.yd==null){el.innerHTML='';return}
- let o='';const ta=FP(d.yd,0),tb=FP(d.yd,53.3);let pt=FP(d.yd,26.65);const v=.5,rx=11+7*v,ar=d.arc;
- if(ar){const A=FP(ar.from,26.65),B=FP(ar.to,26.65),C=[(A[0]+B[0])/2,Math.min(A[1],B[1])-95],t=Math.max(0,Math.min(1,(d.yd-ar.from)/(ar.to-ar.from))),u=1-t;
+function drawDyn(){const fl=!!S.fd.flip,F=(x,y)=>FP(fl?100-x:x,y);const el=$('fdyn'),d=S.fd;if(!el)return;if(d.yd==null){el.innerHTML='';return}
+ let o='';const ta=F(d.yd,0),tb=F(d.yd,53.3);let pt=F(d.yd,26.65);const v=.5,rx=11+7*v,ar=d.arc;
+ if(ar){const A=F(ar.from,26.65),B=F(ar.to,26.65),C=[(A[0]+B[0])/2,Math.min(A[1],B[1])-95],t=Math.max(0,Math.min(1,(d.yd-ar.from)/(ar.to-ar.from))),u=1-t;
   pt=[u*u*A[0]+2*u*t*C[0]+t*t*B[0],u*u*A[1]+2*u*t*C[1]+t*t*B[1]];
   o+='<path d="M'+A[0]+' '+A[1]+' Q'+C[0]+' '+C[1]+' '+B[0]+' '+B[1]+'" stroke="#fff" stroke-width="2.2" stroke-dasharray="2 6" stroke-linecap="round" fill="none" opacity=".9"/><circle cx="'+A[0]+'" cy="'+A[1]+'" r="3.5" fill="#2f9bff"/>'}
- if(!ar&&d.fdv!=null){const t=FP(d.fdv,0),m=FP(d.fdv,53.3);o+='<line x1="'+t[0]+'" y1="'+t[1]+'" x2="'+m[0]+'" y2="'+m[1]+'" stroke="#ffd400" stroke-width="3" stroke-opacity=".95"/>'}
+ if(!ar&&d.fdv!=null){const t=F(d.fdv,0),m=F(d.fdv,53.3);o+='<line x1="'+t[0]+'" y1="'+t[1]+'" x2="'+m[0]+'" y2="'+m[1]+'" stroke="#ffd400" stroke-width="3" stroke-opacity=".95"/>'}
  if(!ar)o+='<line x1="'+ta[0]+'" y1="'+ta[1]+'" x2="'+tb[0]+'" y2="'+tb[1]+'" stroke="#2f9bff" stroke-width="2.4"/>';
  o+='<g transform="translate('+pt[0]+','+pt[1]+')"><ellipse cx="2" cy="6" rx="'+rx+'" ry="'+rx*.35+'" fill="#000" opacity=".4"/><ellipse rx="'+rx+'" ry="'+rx*.58+'" fill="#8b4a17" stroke="#fff" stroke-width="1.4"/><line x1="'+-rx*.4+'" y1="0" x2="'+rx*.4+'" y2="0" stroke="#fff" stroke-width="1.4"/></g>';
- if(d.dir&&!ar){const q=FP(d.yd+d.dir*5,26.65);o+='<polygon points="'+q[0]+','+(q[1]-6)+' '+(q[0]+d.dir*10)+','+q[1]+' '+q[0]+','+(q[1]+6)+'" fill="#fff" opacity=".95"/>'}
+ if(d.dir&&!ar){const q=F(d.yd+d.dir*5,26.65);o+='<polygon points="'+q[0]+','+(q[1]-6)+' '+(q[0]+(fl?-1:1)*d.dir*10)+','+q[1]+' '+q[0]+','+(q[1]+6)+'" fill="#fff" opacity=".95"/>'}
  el.innerHTML=o}
 function setBall(b,key){const d=S.fd;
  if(!b){if(d.raf&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(d.raf);d.arc=null;d.yd=null;d.fdv=null;d.dir=0;return drawDyn()}
@@ -194,7 +195,7 @@ return{txt,typ}})();
 
 const frP=(t,g)=>LANG==='fr'&&!(g&&g.demo)?FRP.txt(t):t,frT=(t,g)=>LANG==='fr'&&!(g&&g.demo)?FRP.typ(t):t;
 function posLab(g,q){if(!q||!q.pt)return'—';const m=String(q.pt).match(/^\s*([A-Z]{2,3})\s+(\d{1,2})\s*$/),t=q.poss&&String(q.poss)===String(g.aid)?g.away:(q.poss&&String(q.poss)===String(g.hid)?g.home:null);return m&&t?t+' '+m[2]:q.pt}
-function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?[g.away,g.home,g.ac,g.hc].join('|'):'-';if(S.fkey!==fk){$('fstat').innerHTML=fieldSvg(g);S.fkey=fk}setBall(ball(g),g?g.id:'');const db=$('demobtn');if(db)db.textContent=S.demo?'■ Arrêter la démo':'▶ Voir une démo du direct';
+function renderField(){const g=S.feat,fb=$('fieldbox');if(!fb)return;const fk=g?[g.away,g.home,g.ac,g.hc].join('|'):'-';S.fd.flip=fFlip(g);if(S.fkey!==fk){$('fstat').innerHTML=fieldSvg(g);S.fkey=fk}setBall(ball(g),g?g.id:'');const db=$('demobtn');if(db)db.textContent=S.demo?'■ Arrêter la démo':'▶ Voir une démo du direct';
  if(!g){$('ftitle').innerHTML='TERRAIN <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';$('fieldnote').textContent='';$('yardstats').innerHTML=yb(['—','—','—','—','—']);return}
  $('ftitle').innerHTML='TERRAIN · '+esc(g.away)+' – '+esc(g.home)+(g.demo?' · <span style="color:#ffb347">DÉMO</span>':g.live?' · <span style="color:#ff6b6b">EN DIRECT</span>':'')+' <button type="button" class="fsback" data-fsclose>‹ Retour</button><button type="button" class="fsrot" data-fsrot>⟳ Pivoter</button><button type="button" class="expand" data-fs aria-label="Plein écran">⛶</button>';
  const q=g.sit,per=g.half?'MT':(g.period>4?'OT':'Q'+g.period);let v,n='';
