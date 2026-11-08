@@ -245,16 +245,22 @@ const BODY={Knee:'genou',Ankle:'cheville',Shoulder:'épaule',Hamstring:'ischio-j
 const injOf=a=>{const i=a&&a.injuries&&a.injuries[0];return i&&(i.status||(i.type&&i.type.description))||''};
 const gone=st=>/^(Out|Injured Reserve|Suspen|PUP|NFI|Reserve)/i.test(st||'');
 function luChip(st){const m=INJ[st]||(st?[st,'q']:null);return m?'<span class="lc '+m[1]+'">'+esc(m[0])+'</span>':''}
+const lcdn=id=>id?'https://a.espncdn.com/i/headshots/nfl/players/full/'+id+'.png':'';
+function luNorm(raw,ro,inj,ab){const items=(raw&&raw.items)||[],T=(inj||[]).find(t=>cn(t.team&&t.team.abbreviation)===ab),im={};((T&&T.injuries)||[]).forEach(x=>{if(x.athlete&&x.athlete.id)im[x.athlete.id]=x.status});
+ return{depthchart:items.map(it=>{const src=Array.isArray(it.positions)?Object.fromEntries(it.positions.map((e,i)=>[String((e.position&&e.position.abbreviation)||('p'+i)).toLowerCase(),e])):(it.positions||{}),P={};
+  Object.keys(src).forEach(k=>{const L=((src[k]&&src[k].athletes)||[]).slice().sort((a,b)=>(a.rank||0)-(b.rank||0));
+   P[k]={athletes:L.map(x=>{const a=x.athlete||{},r=String(a.$ref||a.ref||''),m=/athletes\/(\d+)/.exec(r),id=m?m[1]:String(a.id||''),p=ro[id];if(!id||!p||!p.name)return null;const st=p.inj||im[id]||'';return{id,displayName:p.name,shortName:p.short,injuries:st?[{status:st}]:[]}}).filter(Boolean)}});
+  return{id:it.id,name:it.name,positions:P}})}}
 function luGroups(dc){const F=(dc&&dc.depthchart)||[],g={off:null,def:null,st:null};F.forEach(f=>{const k=Object.keys(f.positions||{});if(!g.off&&k.includes('qb'))g.off=f;else if(!g.st&&k.includes('pk'))g.st=f;else if(!g.def&&(k.includes('lcb')||k.includes('ss')||k.includes('fs')))g.def=f});return g}
 function luRows(f,kind,ro){if(!f)return'';const P=f.positions||{},ks=Object.keys(P).sort((a,b)=>{const L=LORD[kind],ia=L.indexOf(a),ib=L.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)});
  return ks.map(k=>{const A=(P[k].athletes||[]),ok=A.filter(a=>!gone(injOf(a))),out=A.filter(a=>gone(injOf(a))),st=ok[0];if(!st&&!out.length)return'';
   const r=st&&ro[st.id]||{},nm=st?st.displayName||st.shortName:'—';
-  return '<div class="lr"><span class="lp">'+esc(LPOS[k]||k.toUpperCase())+'</span><div class="lm">'+(st?ph({name:nm,photo:r.photo},36):'')+'<div style="min-width:0"><b>'+(r.num?'#'+esc(r.num)+' ':'')+esc(nm)+'</b>'+luChip(st?injOf(st):'')+'<small>'+(ok.length>1?'Puis : '+ok.slice(1,3).map(a=>esc(a.displayName||a.shortName)).join(', '):'')+(out.length?(ok.length>1?' · ':'')+'Absent : '+out.slice(0,2).map(a=>esc(a.displayName||a.shortName)).join(', '):'')+'</small></div></div></div>'}).join('')}
+  return '<div class="lr"><span class="lp">'+esc(LPOS[k]||k.toUpperCase())+'</span><div class="lm">'+(st?ph({name:nm,photo:r.photo||lcdn(st.id)},36):'')+'<div style="min-width:0"><b>'+(r.num?'#'+esc(r.num)+' ':'')+esc(nm)+'</b>'+luChip(st?injOf(st):'')+'<small>'+(ok.length>1?'Puis : '+ok.slice(1,3).map(a=>esc(a.displayName||a.shortName)).join(', '):'')+(out.length?(ok.length>1?' · ':'')+'Absent : '+out.slice(0,2).map(a=>esc(a.displayName||a.shortName)).join(', '):'')+'</small></div></div></div>'}).join('')}
 function luInj(ab){const T=S.lu.inj&&S.lu.inj.find(t=>cn(t.team&&t.team.abbreviation)===ab);if(!S.lu.inj)return'<div class="note">Rapport de blessures indisponible'+(S.lu.err?' ('+esc(S.lu.err)+')':'')+'.</div>';
  const L=(T&&T.injuries)||[];if(!L.length)return'<div class="note">Aucun joueur blessé signalé par ESPN pour cette équipe.</div>';
  const rk=x=>({Out:0,Doubtful:1,Questionable:2}[x.status]??3);
  return '<div class="lbox">'+L.slice().sort((a,b)=>rk(a)-rk(b)).slice(0,18).map(x=>{const a=x.athlete||{},d=x.details||{},ty=d.type||'',pos=a.position&&a.position.abbreviation;
-  return '<div class="lr"><span class="lp">'+esc(pos||'')+'</span><div class="lm">'+ph({name:a.displayName,photo:a.headshot&&a.headshot.href},36)+'<div style="min-width:0"><b>'+(a.jersey?'#'+esc(a.jersey)+' ':'')+esc(a.displayName||a.fullName||'Joueur')+'</b>'+luChip(x.status)+'<small>'+esc(BODY[ty]||ty||'')+(d.returnDate?' · retour estimé '+esc(d.returnDate):'')+'</small></div></div></div>'}).join('')+'</div>'}
+  return '<div class="lr"><span class="lp">'+esc(pos||'')+'</span><div class="lm">'+ph({name:a.displayName,photo:(a.headshot&&a.headshot.href)||((S.lu.ro[ab]||{})[a.id]||{}).photo||lcdn(a.id)},36)+'<div style="min-width:0"><b>'+(a.jersey?'#'+esc(a.jersey)+' ':'')+esc(a.displayName||a.fullName||'Joueur')+'</b>'+luChip(x.status)+'<small>'+esc(BODY[ty]||ty||'')+(d.returnDate?' · retour estimé '+esc(d.returnDate):'')+'</small></div></div></div>'}).join('')+'</div>'}
 function renderLineup(){const el=$('lubox');if(!el)return;const g=S.feat,u=S.lu;
  if(!g){el.innerHTML='<div class="note">Aucun match sélectionné.</div>';return}
  const ab=u.side==='home'?g.home:g.away;
@@ -263,7 +269,7 @@ function renderLineup(){const el=$('lubox');if(!el)return;const g=S.feat,u=S.lu;
  const head='<div class="lh"><b>'+esc(g.away)+' @ '+esc(g.home)+'</b>'+when+'<br>Titulaires probables d’après le « depth chart » d’ESPN, joueurs blessés ou absents écartés. Ça peut changer jusqu’au coup d’envoi : la liste officielle des joueurs actifs (publiée 1h30 avant le match) n’est pas fournie ici.</div>';
  const D=u.dc[ab];if(D===undefined||u.busy&&!D){el.innerHTML=bar+head+'<div class="note">Chargement de la composition…</div>';return}
  if(D.err){el.innerHTML=bar+head+'<div class="note">Composition indisponible : '+esc(D.err)+'</div>'+'<div class="lg3">BLESSURES</div>'+luInj(ab);return}
- const G=luGroups(D.v),ro=u.ro[ab]||{};
+ const ro=u.ro[ab]||{},G=luGroups(luNorm(D.v,ro,u.inj,ab));
  if(!G.off&&!G.def&&!G.st){el.innerHTML=bar+head+'<div class="note">ESPN n’a pas encore publié de composition pour cette équipe.</div><div class="lg3">BLESSURES</div>'+luInj(ab);return}
  const sec=(t,f,k)=>f?'<div class="lg3">'+t+'</div><div class="lbox">'+luRows(f,k,ro)+'</div>':'';
  el.innerHTML=bar+head+sec('ATTAQUE',G.off,'off')+sec('DÉFENSE',G.def,'def')+sec('ÉQUIPES SPÉCIALES',G.st,'st')+'<div class="lg3">RAPPORT DE BLESSURES</div>'+luInj(ab)}
@@ -271,8 +277,9 @@ async function loadLineup(){const g=S.feat,u=S.lu;renderLineup();if(!g||u.busy)r
  const key=g.id+'|'+g.away+'|'+g.home,fresh=u.key===key&&Date.now()-u.t<3e5&&u.dc[g.away]&&u.dc[g.home];if(fresh)return;
  if(u.key!==key){u.dc={};u.ro={};u.inj=null;u.err='';u.key=key}u.busy=true;
  const one=async ab=>{if(!EID[ab]){u.dc[ab]={err:'équipe inconnue'};return}
-  try{u.dc[ab]={v:await get(ESPN+'/teams/'+EID[ab]+'/depthcharts',6e5)}}catch(e){u.dc[ab]={err:e.message}}
-  try{const j=await get(ESPN+'/teams/'+EID[ab]+'/roster',36e5),m={};(j.athletes||[]).forEach(gr=>(Array.isArray(gr.items)?gr.items:[gr]).forEach(a=>{if(a&&a.id)m[a.id]={num:a.jersey,photo:a.headshot&&a.headshot.href}}));u.ro[ab]=m}catch(e){u.ro[ab]={}}};
+  const yr=S.year||new Date().getFullYear(),dcP=(async()=>{try{u.dc[ab]={v:await get('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/'+yr+'/teams/'+EID[ab]+'/depthcharts?lang=en&region=us',6e5)}}catch(e){u.dc[ab]={err:/^HTTP/.test(e.message)?e.message:'ESPN ne répond pas pour le moment, réessaie dans un instant'}}})();
+  try{const j=await get(ESPN+'/teams/'+EID[ab]+'/roster',36e5),m={};(j.athletes||[]).forEach(gr=>(Array.isArray(gr.items)?gr.items:[gr]).forEach(a=>{if(a&&a.id)m[a.id]={num:a.jersey,photo:a.headshot&&a.headshot.href,name:a.displayName||a.fullName||'',short:a.shortName||'',inj:injOf(a)}}));u.ro[ab]=m}catch(e){u.ro[ab]={}}
+  await dcP};
  const inj=async()=>{if(g.demo)return;try{const j=await get(ESPN+'/summary?event='+g.id,3e5);u.inj=j.injuries||[]}catch(e){u.err=e.message;u.inj=null}};
  await Promise.all([one(g.away),one(g.home),inj()]);u.busy=false;u.t=Date.now();if(S.feat&&S.feat.id===g.id)renderLineup()}
 const CMP=[['Points marqués / match','scoring','totalPointsPerGame'],['Yards totaux / match','passing','yardsPerGame'],['Yards à la passe / match','passing','netPassingYardsPerGame'],['Yards à la course / match','rushing','rushingYardsPerGame'],['3e tentatives réussies (%)','miscellaneous','thirdDownConvPct'],['Zone rouge : touchdowns (%)','miscellaneous','redzoneTouchdownPct'],['Sacks réalisés','defensive','sacks'],['Interceptions (défense)','defensiveInterceptions','interceptions'],['Ballons récupérés','miscellaneous','totalTakeaways'],['Différentiel de pertes de balle','miscellaneous','turnOverDifferential']];
